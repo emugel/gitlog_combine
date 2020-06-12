@@ -1,6 +1,5 @@
 ## To Do
 
-- Learn awk (or ask): how to omit first column of a line when it is identical to the previous line. So we can prettify -m output.
 
 ## Done
 
@@ -10,3 +9,4 @@
 - start the script
 - implement -n <N> option
 - Option -m 2: show last M for each repo
+- Learn awk (or ask): how to omit first column of a line when it is identical to the previous line. So we can prettify -m output.
