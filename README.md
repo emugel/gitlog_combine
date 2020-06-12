@@ -4,6 +4,9 @@
 
 ## Why?
 
+After an half an hour search for such a tool I didn't find much.
+Granted, it's really not that difficult.
+
 Suppose you have a `~/code` directory containing those repos:
 
 ```
@@ -21,8 +24,23 @@ You would use this tool to check the recent git logs of those 3 pokemon folders:
 4 weeks ago 4a498 pokemoncore: change README
 3 weeks ago 9f201 pokemonclient: add GET /nbPokemons
 3 weeks ago 42424 pokemonserver: add GET /nbPokemons
-yesterday 1a9a42 pokemoncore: fix #42
+2 minutes ago 1a9a42 pokemoncore: fix #42
 ```
+
+You may also want to show the last 2 entries per repo:
+
+`gitlog_combine -m 2 pokemon*`
+
+```
+pokemoncore   4 weeks ago   change README
+              2 minutes ago fix #42
+pokemonclient 7 months ago  version 1.1
+              3 weeks ago   add GET /nbPokemons
+pokemonserver 6 months ago  version 1.1
+              3 weeks ago   add GET /nbPokemons
+```
+
+The second version with `-m` will show different colors, for instance 2 minutes will be bright red, while old entries will be dark gray. 
 
 ## Usage
 

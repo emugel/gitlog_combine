@@ -5,7 +5,7 @@ defaultNumberOfLastEntries=15
 # ------------ don't edit below, unless you know what you're doing -----------
 #
 progName="$( basename "$0" )"
-version=0.1
+version=0.1.1
 
 warn() { local fmt="$1"; shift; printf "$progName: $fmt\n" "$@" >&2; }
 die () { local st="$?"; warn "$@"; exit "$st"; } 
