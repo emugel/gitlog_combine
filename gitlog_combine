@@ -53,13 +53,14 @@ for f in "${files[@]}"; do
         # branch will be empty if error. 
         # In that case we want not to exec next line
         [[ -n $branch ]] || git log --pretty=format:"%ct|%H|%ar|$dir:$branch|%s" --abbrev-commit >> "$tmp"
+        echo >> "$tmp"
         cd - >/dev/null
     fi
 done
 
 tmp2="$( mktemp )"
-sort "$tmp" | tail -n "$defaultNumberOfLastEntries" > "$tmp2"
-# see also snippet "stdin"
+sort --numeric-sort "$tmp" | tail -n "$defaultNumberOfLastEntries" > "$tmp2"
+
 while read -ru3 line; do
     if [[ "$line" =~ ^(.*)\|(.*)\|(.*)\|(.*):(.*)\|(.*)$ ]]; then
         ts="${BASH_REMATCH[1]}"
@@ -70,7 +71,6 @@ while read -ru3 line; do
         commitmsg="${BASH_REMATCH[6]}"
         repobranch="$repo"
         [[ $branch = "master" ]] || repobranch+="[1;37m:[30m$branch[0m"
-        # echo -e "[1;33m$ago[0m $repo[1;37m:[36m$branch[0m $commitmsg"
         echo -e "[1;33m$ago[0m [1;30m${fullhash:0:5}[0m $repobranch[0m $commitmsg"
     fi
 done 3<"$tmp2"
