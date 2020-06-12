@@ -29,7 +29,8 @@ yesterday 1a9a42 pokemoncore: fix #42
 * `gitlog_combine pokemon*` :: By default, shows the 15 most recent entries.
 * `gitlog_combine pok* --days=5` :: In the last 5 days (TODO)
 * `gitlog_combine * -n 5` :: The 5 most recent entries globally
-* `gitlog_combine * -m 2` :: The last 2 entries for each repo
+* `gitlog_combine * -m 2` :: The last 2 entries for each repo, colored based on recentness
+* `gitlog_combine * -m 2 --long` :: The last 2 entries for each repo, not truncating commit msg to 60 chars
 * `gitlog_combine * --all` :: Output everything, from first to last
 * `gitlog_combine * --all | tac` :: Output everything, from last to first
 * `gitlog_combine pok*  /path/to/some/other/repo  /yet/another/one` :: This also works
