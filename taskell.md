@@ -1,5 +1,6 @@
 ## To Do
 
+- Learn awk (or ask): how to omit first column of a line when it is identical to the previous line. So we can prettify -m output.
 
 ## Done
 
@@ -8,3 +9,4 @@
 - git log line to get this format: `git log -n5 --pretty=format:"%ct|%h|%ar|$dirname:$branch|%s" --abbrev-commit --abbrev=7`
 - start the script
 - implement -n <N> option
+- Option -m 2: show last M for each repo

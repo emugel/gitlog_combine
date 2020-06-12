@@ -19,7 +19,8 @@ Syntax: $progName [OPTIONS] dirs...
 OPTIONS:
  --help -h        Show help
  --version -v     Show version and exit
- -n <n>           Show N last entries (default: $defaultNumberOfLastEntries)
+ -n <N>           Show N last entries globally (default: $defaultNumberOfLastEntries)
+ -m <M>           Show M last entries from EACH repo (e.g. -m 1 shows last entry per repo)
  --all            Show all entries for first to last
  
 EXAMPLES:
@@ -34,6 +35,7 @@ for i in "$@"; do
         --help | -h ) shift; echo "$helpString"; exit 0 ;;
         --version | -v ) shift; echo "$version"; exit 0 ;;
         -n) shift; optN=$1; shift ;;
+        -m) shift; optM=$1; shift ;;
         --all) shift; optAll=1 ;;
         -* ) echo "Unknown option: $i"; exit 1 ;;
         *)  files+=( "$i" );;
@@ -50,16 +52,26 @@ for f in "${files[@]}"; do
     if [[ -d "$dir" && -d "$dir/.git/" ]]; then
         cd "$dir"
         branch=$(git describe --contains --all HEAD  2>&1 >/dev/null )
+
+        [[ -n $optM ]] && sOptM="-n$optM"
+
+        # show last N across all repos
         # branch will be empty if error. 
         # In that case we want not to exec next line
-        [[ -n $branch ]] || git log --pretty=format:"%ct|%H|%ar|$dir:$branch|%s" --abbrev-commit >> "$tmp"
+        [[ -n $branch ]] || git log $sOptM --pretty=format:"%ct|%H|%ar|$dir:$branch|%s" --abbrev-commit >> "$tmp"
         echo >> "$tmp"
         cd - >/dev/null
     fi
 done
 
 tmp2="$( mktemp )"
-sort --numeric-sort "$tmp" | tail -n "$defaultNumberOfLastEntries" > "$tmp2"
+if [[ -n $optM ]]; then
+    # show last M in each repo
+    tail -n "$defaultNumberOfLastEntries" "$tmp" > "$tmp2"
+else 
+    # show last N across all repos
+    sort --numeric-sort "$tmp" | tail -n "$defaultNumberOfLastEntries" > "$tmp2"
+fi
 
 while read -ru3 line; do
     if [[ "$line" =~ ^(.*)\|(.*)\|(.*)\|(.*):(.*)\|(.*)$ ]]; then
@@ -70,8 +82,12 @@ while read -ru3 line; do
         branch="${BASH_REMATCH[5]}"
         commitmsg="${BASH_REMATCH[6]}"
         repobranch="$repo"
-        [[ $branch = "master" ]] || repobranch+="[1;37m:[30m$branch[0m"
-        echo -e "[1;33m$ago[0m [1;30m${fullhash:0:5}[0m $repobranch[0m $commitmsg"
+        [[ $branch = "master" || -z $branch ]] || repobranch+="[1;37m:[30m$branch[0m"
+        if [[ -n $optM ]]; then 
+            echo -e "$repobranch [1;33m$ago[0m $commitmsg"
+        else 
+            echo -e "[1;33m$ago[0m [1;30m${fullhash:0:5}[0m $repobranch[0m $commitmsg"
+        fi
     fi
 done 3<"$tmp2"
 
