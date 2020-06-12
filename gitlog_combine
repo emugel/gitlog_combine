@@ -21,6 +21,7 @@ OPTIONS:
  --version -v     Show version and exit
  -n <N>           Show N last entries globally (default: $defaultNumberOfLastEntries)
  -m <M>           Show M last entries from EACH repo (e.g. -m 1 shows last entry per repo)
+ --long -l        Enable long commit messages (default is to truncate at col 60)
  --all            Show all entries for first to last
  
 EXAMPLES:
@@ -36,6 +37,7 @@ for i in "$@"; do
         --version | -v ) shift; echo "$version"; exit 0 ;;
         -n) shift; optN=$1; shift ;;
         -m) shift; optM=$1; shift ;;
+        --long | -l) shift; optLong=1 ;;
         --all) shift; optAll=1 ;;
         -* ) echo "Unknown option: $i"; exit 1 ;;
         *)  files+=( "$i" );;
@@ -73,23 +75,53 @@ else
     sort --numeric-sort "$tmp" | tail -n "$defaultNumberOfLastEntries" > "$tmp2"
 fi
 
-while read -ru3 line; do
-    if [[ "$line" =~ ^(.*)\|(.*)\|(.*)\|(.*):(.*)\|(.*)$ ]]; then
-        ts="${BASH_REMATCH[1]}"
-        fullhash="${BASH_REMATCH[2]}"
-        ago="${BASH_REMATCH[3]}"
-        repo="[1;37m$( realpath --relative-base="$PWD" "${BASH_REMATCH[4]}" )[0m"
-        branch="${BASH_REMATCH[5]}"
-        commitmsg="${BASH_REMATCH[6]}"
-        repobranch="$repo"
-        [[ $branch = "master" || -z $branch ]] || repobranch+="[1;37m:[30m$branch[0m"
-        if [[ -n $optM ]]; then 
-            echo -e "$repobranch [1;33m$ago[0m $commitmsg"
-        else 
-            echo -e "[1;33m$ago[0m [1;30m${fullhash:0:5}[0m $repobranch[0m $commitmsg"
+preformat_me() {
+    while read -ru3 line; do
+        if [[ "$line" =~ ^(.*)\|(.*)\|(.*)\|(.*):(.*)\|(.*)$ ]]; then
+            ts="${BASH_REMATCH[1]}"
+            fullhash="${BASH_REMATCH[2]}"
+            ago="${BASH_REMATCH[3]}"
+            repo="$( realpath --relative-base="$PWD" "${BASH_REMATCH[4]}" )"
+            branch="${BASH_REMATCH[5]}"
+            [[ -n $optLong ]] && commitmsg="${BASH_REMATCH[6]}" || commitmsg=${BASH_REMATCH[6]:0:60}""
+            [[ $branch = "master" || -z $branch ]] || coloredbranch="[1;37m:[30m$branch[0m"
+            if [[ -n $optM ]]; then echo -e "$repo:$branch:$ago:$commitmsg" 
+            else 
+                # TODO remove ANSI codes from here...
+                # echo -e "$ago:${fullhash:0:5}:$repo:$coloredbranch:$commitmsg"
+                echo -e "[1;33m$ago[0m [1;30m${fullhash:0:5}[0m [1;37m$repo$coloredbranch[0m $commitmsg"
+            fi
         fi
-    fi
-done 3<"$tmp2"
+    done 3<"$tmp2"
+}
+
+if [[ -n $optM ]]; then 
+    # first, 2 awk commands to count max lengths of repo and date to set alignment
+    maxLenField1=$( preformat_me | awk -F: '{ maxLen=(length($1) > maxLen ? length($1) : maxLen) } END { print maxLen }' )
+    maxLenField3=$( preformat_me | awk -F: '{ maxLen=(length($3) > maxLen ? length($3) : maxLen) } END { print maxLen }' )
+    # awk cmd to hide first column when it's similar to previous line(s).
+    #       <--maxLen1---><--maxLen3-->
+    # e.g. "pokemonclient 2 weeks ago  typo
+    #       pokemonclient 1 weeks ago  change title
+    #       pokemondoc    1 months ago reorganize"
+    #
+    # to show as:
+    #       pokemonclient 2 weeks ago  typo
+    #                     1 weeks ago  change title
+    #       pokemondoc    1 months ago reorganize
+    preformat_me | awk -F: '{ 
+        printf "[1;37m%-'$(( maxLenField1+1 ))'s[0m", (prev1stCol == $1 ? "" : $1 )
+        if ($3 ~ /(seconds|minutes|hours)/) { color="1;31m" } 
+        else if ($3 ~ /(days)/)             { color="0;31m" }
+        else if ($3 ~ /(weeks)/)            { color="0;33m" }
+        else                                { color="1;30m" }
+        printf "[" color "%-'$(( maxLenField3+1 ))'s[0m", $3  
+        for (i=4; i<=NF; i++) printf "%s ", $i 
+        print ""
+        prev1stCol = $1  
+    }'
+else preformat_me 
+fi
 
 rm -f "$tmp" "$tmp2"
 
