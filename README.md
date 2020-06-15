@@ -4,8 +4,7 @@
 
 ## Why?
 
-After an half an hour search for such a tool I didn't find much.
-Granted, it's really not that difficult.
+After an half an hour search for such a tool I didn't find much (see Alternatives below)
 
 Suppose you have a `~/code` directory containing those repos:
 
@@ -62,4 +61,9 @@ When using a wildcard, files will not be considered, directories not having a di
 
 This is public domain. Feel free to modify it.
 
+# Alternatives 
 
+Didn't find much, which is why I wrote this pure bash script that just works simpler.
+
+* [gitlogg](https://daattali.com/shiny/visualize-git-commits-time/), it is not in pure bash but requires node and babeljs, plus it merges logs in a json file.
+* [gist from gka](https://gist.github.com/gka/393f5ab2b95e927d305eb6e14767180e), to show logs on a png using R
